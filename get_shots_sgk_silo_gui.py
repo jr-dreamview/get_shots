@@ -2,7 +2,8 @@ import os
 import sys
 
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox, QVBoxLayout, QWidget
+from PySide2.QtWidgets import (
+    QComboBox, QDialog, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox, QVBoxLayout, QWidget)
 from shiboken2 import wrapInstance
 
 scriptpath = r"V:\Scripts"
@@ -22,7 +23,7 @@ class SceneWidget(QWidget):
     def __init__(self, parent=None):
         super(SceneWidget, self).__init__(parent)
 
-        self.l_edit_shot_names = None
+        self.l_edit_shot_name = None
         self.l_edit_render_preset = None
         self.l_edit_aov_preset = None
 
@@ -31,8 +32,11 @@ class SceneWidget(QWidget):
         self.l_edit_description = None
 
         self.btn_execute_build = None
+        self.btn_update_button = None
+        self.btn_reframing = None
         self.btn_execute_farm = None
         self.btn_execute_local = None
+        self.btn_get_shot = None
 
         self.setup_ui()
         self.setup_connections()
@@ -41,15 +45,15 @@ class SceneWidget(QWidget):
         config = dict(
             verbose=False,
             shot_type="silosetup",
-            shot_names=self.l_edit_shot_names.text(),
-            render_preset=self.l_edit_render_preset.text(),
-            aov_preset=self.l_edit_aov_preset.text(),
+            shot_names=self.l_edit_shot_name.text(),
+            render_preset=self.l_edit_render_preset.currentText(),
+            aov_preset=self.l_edit_aov_preset.currentText(),
 
             download_assets=True,
             start=True,
             ref_assets=True,
-            render_settings=bool(self.l_edit_render_preset.text()),
-            aov_settings=bool(self.l_edit_aov_preset.text()),
+            render_settings=bool(self.l_edit_render_preset.currentText()),
+            aov_settings=bool(self.l_edit_aov_preset.currentText()),
 
             silopass_n_test=False,
             silopass_n_render=False,
@@ -64,15 +68,15 @@ class SceneWidget(QWidget):
         config = dict(
             verbose=False,
             shot_type="silosetup",
-            shot_names=self.l_edit_shot_names.text(),
-            render_preset=self.l_edit_render_preset.text(),
-            aov_preset=self.l_edit_aov_preset.text(),
+            shot_names=self.l_edit_shot_name.text(),
+            render_preset=self.l_edit_render_preset.currentText(),
+            aov_preset=self.l_edit_aov_preset.currentText(),
 
             download_assets=False,
             start=False,
             ref_assets=False,
-            render_settings=bool(self.l_edit_render_preset.text()),
-            aov_settings=bool(self.l_edit_aov_preset.text()),
+            render_settings=bool(self.l_edit_render_preset.currentText()),
+            aov_settings=bool(self.l_edit_aov_preset.currentText()),
 
             silopass_n_test=False,
             silopass_n_render=True,
@@ -87,15 +91,15 @@ class SceneWidget(QWidget):
         config = dict(
             verbose=False,
             shot_type="silosetup",
-            shot_names=self.l_edit_shot_names.text(),
-            render_preset=self.l_edit_render_preset.text(),
-            aov_preset=self.l_edit_aov_preset.text(),
+            shot_names=self.l_edit_shot_name.text(),
+            render_preset=self.l_edit_render_preset.currentText(),
+            aov_preset=self.l_edit_aov_preset.currentText(),
 
             download_assets=False,
             start=False,
             ref_assets=False,
-            render_settings=bool(self.l_edit_render_preset.text()),
-            aov_settings=bool(self.l_edit_aov_preset.text()),
+            render_settings=bool(self.l_edit_render_preset.currentText()),
+            aov_settings=bool(self.l_edit_aov_preset.currentText()),
 
             silopass_n_test=True,
             silopass_n_render=False,
@@ -123,15 +127,32 @@ class SceneWidget(QWidget):
     def setup_ui(self):
         lyt_v_main = QVBoxLayout()
 
-        # Shot Names
-        lyt_h_shot_names = QHBoxLayout()
-        label_shot_names = QLabel("Silo Scene Setup")
-        label_shot_names.setFixedWidth(LABEL_WIDTH)
-        label_shot_names.setAlignment(Qt.AlignRight)
-        lyt_h_shot_names.addWidget(label_shot_names)
-        self.l_edit_shot_names = QLineEdit(self)
-        lyt_h_shot_names.addWidget(self.l_edit_shot_names)
-        lyt_v_main.addLayout(lyt_h_shot_names)
+        # Silo Scene Setup Group Box
+        grp_bx_scene = QGroupBox(self)
+        grp_bx_scene.setTitle("Silo Scene Setup")
+        lyt_v_scene = QVBoxLayout()
+        lyt_h_set_shot = QHBoxLayout()
+        label_set_shot = QLabel("Set Shot", self)
+        label_set_shot.setFixedWidth(LABEL_WIDTH)
+        label_set_shot.setAlignment(Qt.AlignRight)
+        lyt_h_set_shot.addWidget(label_set_shot)
+        cmb_bx_set_shot = QComboBox(self)
+        cmb_bx_set_shot.addItems(["", "Shot1", "Shot2", "Shot3"])
+        lyt_h_set_shot.addWidget(cmb_bx_set_shot)
+        lyt_v_scene.addLayout(lyt_h_set_shot)
+        self.btn_get_shot = QPushButton("Get Shot", parent=self)
+        lyt_v_scene.addWidget(self.btn_get_shot)
+        lyt_h_shot_name = QHBoxLayout()
+        label_shot_name = QLabel("Scene", self)
+        label_shot_name.setFixedWidth(LABEL_WIDTH)
+        label_shot_name.setAlignment(Qt.AlignRight)
+        lyt_h_shot_name.addWidget(label_shot_name)
+        self.l_edit_shot_name = QLineEdit(self)
+        self.l_edit_shot_name.setEnabled(False)
+        lyt_h_shot_name.addWidget(self.l_edit_shot_name)
+        lyt_v_scene.addLayout(lyt_h_shot_name)
+        grp_bx_scene.setLayout(lyt_v_scene)
+        lyt_v_main.addWidget(grp_bx_scene)
 
         # Render Preset
         lyt_h_render_preset = QHBoxLayout()
@@ -139,7 +160,8 @@ class SceneWidget(QWidget):
         label_render_preset.setFixedWidth(LABEL_WIDTH)
         label_render_preset.setAlignment(Qt.AlignRight)
         lyt_h_render_preset.addWidget(label_render_preset)
-        self.l_edit_render_preset = QLineEdit(self)
+        self.l_edit_render_preset = QComboBox(self)
+        self.l_edit_render_preset.addItems(["", "Render Preset 1", "Render Preset 2"])
         lyt_h_render_preset.addWidget(self.l_edit_render_preset)
         lyt_v_main.addLayout(lyt_h_render_preset)
 
@@ -149,7 +171,8 @@ class SceneWidget(QWidget):
         label_aov_preset.setFixedWidth(LABEL_WIDTH)
         label_aov_preset.setAlignment(Qt.AlignRight)
         lyt_h_aov_preset.addWidget(label_aov_preset)
-        self.l_edit_aov_preset = QLineEdit(self)
+        self.l_edit_aov_preset = QComboBox(self)
+        self.l_edit_aov_preset.addItems(["", "AOV Preset 1", "AOV Preset 2"])
         lyt_h_aov_preset.addWidget(self.l_edit_aov_preset)
         lyt_v_main.addLayout(lyt_h_aov_preset)
 
@@ -162,6 +185,7 @@ class SceneWidget(QWidget):
         label_x = QLabel("X:")
         lyt_h_res.addWidget(label_x)
         self.spn_bx_x_res = QSpinBox(self)
+        self.spn_bx_x_res.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
         self.spn_bx_x_res.setMinimum(1)
         self.spn_bx_x_res.setMaximum(RES_MAX)
         self.spn_bx_x_res.setValue(RES_DEFAULT)
@@ -170,6 +194,7 @@ class SceneWidget(QWidget):
         label_y = QLabel("Y:")
         lyt_h_res.addWidget(label_y)
         self.spn_bx_y_res = QSpinBox(self)
+        self.spn_bx_y_res.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
         self.spn_bx_y_res.setMinimum(1)
         self.spn_bx_y_res.setMaximum(RES_MAX)
         self.spn_bx_y_res.setValue(RES_DEFAULT)
@@ -178,8 +203,15 @@ class SceneWidget(QWidget):
         lyt_h_res.addStretch()
         lyt_v_main.addLayout(lyt_h_res)
 
+        # Update Button
+        lyt_h_buttons = QHBoxLayout()
         self.btn_execute_build = QPushButton("Build", self)
-        lyt_v_main.addWidget(self.btn_execute_build)
+        lyt_h_buttons.addWidget(self.btn_execute_build)
+        self.btn_update_button = QPushButton("Update", self)
+        lyt_h_buttons.addWidget(self.btn_update_button)
+        self.btn_reframing = QPushButton("Reframe", self)
+        lyt_h_buttons.addWidget(self.btn_reframing)
+        lyt_v_main.addLayout(lyt_h_buttons)
 
         # Description
         lyt_h_description = QHBoxLayout()
@@ -191,13 +223,13 @@ class SceneWidget(QWidget):
         lyt_h_description.addWidget(self.l_edit_description)
         lyt_v_main.addLayout(lyt_h_description)
 
-        # Buttons
-        lyt_h_buttons = QHBoxLayout()
+        # Render Buttons
+        lyt_h_render_buttons = QHBoxLayout()
         self.btn_execute_farm = QPushButton("Render - Farm", self)
         self.btn_execute_local = QPushButton("Render - Local", self)
-        lyt_h_buttons.addWidget(self.btn_execute_farm)
-        lyt_h_buttons.addWidget(self.btn_execute_local)
-        lyt_v_main.addLayout(lyt_h_buttons)
+        lyt_h_render_buttons.addWidget(self.btn_execute_farm)
+        lyt_h_render_buttons.addWidget(self.btn_execute_local)
+        lyt_v_main.addLayout(lyt_h_render_buttons)
 
         self.setLayout(lyt_v_main)
 
